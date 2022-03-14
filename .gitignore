@@ -75,5 +75,3 @@ typings/
 # FuseBox cache
 .fusebox/
 .DS_Store
-
-index.bundle.js

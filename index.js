@@ -1,6 +1,6 @@
 const postcss = require('postcss');
 
-const PLUGIN_NAME = 'postcss-transition';
+const PLUGIN_NAME = 'postcss-fluid-type';
 
 const pi = (o) => parseInt(o, 10);
 const pf = (o) => parseFloat(o);
@@ -11,9 +11,7 @@ module.exports = (opts = {}) => {
     Once(root) {
       const $opts = Object.assign(
         {
-          min: '320px',
-          max: '1200px',
-          functionName: 'fluid',
+          functionName: 'fluid-type',
         },
         opts
       );
@@ -27,16 +25,14 @@ module.exports = (opts = {}) => {
           return;
         }
 
-        let min = decl.value.replace(regex, (_, values) => values.split(',').map((a) => a.trim())[0]);
-        let max = decl.value.replace(regex, (_, values) => values.split(',').map((a) => a.trim())[1]);
+        let from = decl.value.replace(regex, (_, values) => values.split(',').map((a) => a.trim())[0]);
+        let to = decl.value.replace(regex, (_, values) => values.split(',').map((a) => a.trim())[1]);
+        let min = decl.value.replace(regex, (_, values) => values.split(',').map((a) => a.trim())[2]);
+        let max = decl.value.replace(regex, (_, values) => values.split(',').map((a) => a.trim())[3]);
 
         decl.value = decl.value.replace(regex, (_, values /*, index*/) => {
-          const { minVal, maxVal } = parseValues(values);
-
-          // TODO: Rem
-          // return `calc(${minValue} + ${maxValueInt} * (1px + ((100vw - ${$opts.min}) / (${p($opts.max)} - ${p($opts.min)})) - 1px))`;
-          // Px
-          return `calc(${minVal} + ${pf(maxVal) - pf(minVal)} * (100vw - ${$opts.min}) / ${pi($opts.max) - pi($opts.min)})`;
+          const { from, to, minVal, maxVal } = parseValues(values);
+          return `calc(${minVal} + ${pf(maxVal) - pf(minVal)} * (100vw - ${from}) / ${pi(to) - pi(from)})`;
         });
 
         mediaMin.push({
@@ -53,11 +49,11 @@ module.exports = (opts = {}) => {
       });
 
       if (mediaMin.length) {
-        addMediaRule(root, `(max-width: ${$opts.min})`, mediaMin);
+        addMediaRule(root, `(max-width: ${from})`, mediaMin);
       }
 
       if (mediaMax.length) {
-        addMediaRule(root, `(min-width: ${$opts.max})`, mediaMax);
+        addMediaRule(root, `(min-width: ${to})`, mediaMax);
       }
     }
   }
@@ -94,7 +90,9 @@ function parseValues(values) {
   const $values = values.split(',').map((a) => a.trim());
 
   return {
-    minVal: $values[0],
-    maxVal: $values[1],
+    from: $values[0],
+    to: $values[1],
+    minVal: $values[2],
+    maxVal: $values[3],
   };
 }
